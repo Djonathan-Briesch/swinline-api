@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id                 Int                  @id @default(autoincrement())
+  userTypeId         Int
+  userStatusId       Int
+  name               String
+  email              String               @unique
+  password           String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  deletedAt          DateTime?
+  feedingAdjustments FeedingAdjustments[]
+  userType           UserTypes            @relation(fields: [userTypeId], references: [id])
+  userStatus         UserStatus           @relation(fields: [userStatusId], references: [id])
+  alerts             Alerts[]
+}
+
+model UserTypes {
+  id          Int     @id @default(autoincrement())
+  description String  @unique
+  users       Users[]
+}
+
+model UserStatus {
+  id          Int     @id @default(autoincrement())
+  description String  @unique
+  users       Users[]
+}
+
+model Sows {
+  id            Int             @id @default(autoincrement())
+  rfid          String          @unique
+  earTagNumber  String          @unique
+  cycles        Int
+  birthDate     DateTime
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+  inseminations Inseminations[]
+}
+
+model Inseminations {
+  id               Int           @id @default(autoincrement())
+  sowId            Int
+  inseminationDate DateTime
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  removalReason    String?
+  deletedAt        DateTime?
+  sow              Sows          @relation(fields: [sowId], references: [id])
+  confinaments     Confinements?
+}
+
+model Confinements {
+  id                 Int                  @id @default(autoincrement())
+  inseminationId     Int                  @unique
+  feedPlansId        Int
+  confinementDate    DateTime
+  notes              String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  deletedAt          DateTime?
+  feedingAdjustments FeedingAdjustments[]
+  feedingRecords     FeedingRecords[]
+  feedPlan           FeedPlans            @relation(fields: [feedPlansId], references: [id])
+  insemination       Inseminations        @relation(fields: [inseminationId], references: [id])
+  alerts             Alerts[]
+}
+
+model FeedPlans {
+  id             Int              @id @default(autoincrement())
+  feedPlanTypeId Int
+  name           String
+  description    String
+  totalDays      Int
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+  feedPlanPhases FeedPlanPhases[]
+  confinaments   Confinements[]
+  feedPlanType   FeedPlanTypes    @relation(fields: [feedPlanTypeId], references: [id])
+}
+
+model FeedPlanTypes {
+  id          Int         @id @default(autoincrement())
+  description String      @unique
+  feedPlans   FeedPlans[]
+}
+
+model FeedPlanPhases {
+  id            Int          @id @default(autoincrement())
+  feedPlanId    Int
+  feedPortionId Int
+  startDay      Int
+  endDay        Int
+  feedPlan      FeedPlans    @relation(fields: [feedPlanId], references: [id])
+  feedPortion   FeedPortions @relation(fields: [feedPortionId], references: [id])
+}
+
+model FeedPortions {
+  id                Int              @id @default(autoincrement())
+  feedAmountInGrams Int
+  feedPlanPhases    FeedPlanPhases[]
+}
+
+model FeedingAdjustments {
+  id             Int          @id @default(autoincrement())
+  confinementId  Int
+  userId         Int
+  alertId        Int
+  startDay       Int
+  endDay         Int
+  adjustedAmount Int
+  reason         String?
+  createdAt      DateTime     @default(now())
+  confinement    Confinements @relation(fields: [confinementId], references: [id])
+  user           Users        @relation(fields: [userId], references: [id])
+  alerts         Alerts[]
+}
+
+model FeedingRecords {
+  id             Int          @id @default(autoincrement())
+  confinementId  Int
+  entryDateTime  DateTime
+  exitDateTime   DateTime
+  amountConsumed Int
+  confinement    Confinements @relation(fields: [confinementId], references: [id])
+}
+
+model Alerts {
+  id                  Int                 @id @default(autoincrement())
+  alertTypeId         Int
+  alertStatusId       Int
+  confinementId       Int?
+  userId              Int?
+  feedingAdjustmentId Int?
+  description         String
+  createdAt           DateTime            @default(now())
+  alertType           AlertTypes          @relation(fields: [alertTypeId], references: [id])
+  alertStatus         AlertStatus         @relation(fields: [alertStatusId], references: [id])
+  confinement         Confinements?       @relation(fields: [confinementId], references: [id])
+  user                Users?              @relation(fields: [userId], references: [id])
+  feedingAdjustment   FeedingAdjustments? @relation(fields: [feedingAdjustmentId], references: [id])
+}
+
+model AlertTypes {
+  id          Int      @id @default(autoincrement())
+  description String   @unique
+  alerts      Alerts[]
+}
+
+model AlertStatus {
+  id          Int      @id @default(autoincrement())
+  description String   @unique
+  alerts      Alerts[]
+}
+
+model AlertParameter {
+  id                             Int @id @default(autoincrement())
+  maxFeedingTimeMinutes          Int
+  maxIntervalWithoutFeedingHours Int
+  rfidReadTolerance              Int
+  minAmountWithoutAlertGrams     Int
+}
+
+model FeederSetting {
+  id                     Int @id @default(autoincrement())
+  motorFeedOnTimeSeconds Int // Tempo do motor ligado para liberar ração
+  portionAmountGrams     Int // Quantidade de ração liberada por tempo do motor
+  portionIntervalSeconds Int // Intervalo entre liberação das porções
+  entryDoorDelaySeconds  Int // Tempo em espera para abrir a porta para a próxima matriz
+}
