@@ -60,19 +60,20 @@ model Inseminations {
 }
 
 model Confinements {
-  id                 Int                  @id @default(autoincrement())
-  inseminationId     Int                  @unique
-  feedPlansId        Int
-  confinementDate    DateTime
-  notes              String?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  deletedAt          DateTime?
-  feedingAdjustments FeedingAdjustments[]
-  feedingRecords     FeedingRecords[]
-  feedPlan           FeedPlans            @relation(fields: [feedPlansId], references: [id])
-  insemination       Inseminations        @relation(fields: [inseminationId], references: [id])
-  alerts             Alerts[]
+  id                      Int                  @id @default(autoincrement())
+  inseminationId          Int                  @unique
+  feedPlansId             Int
+  confinementDate         DateTime
+  notes                   String?
+  isSeparatedAfterFeeding Boolean              @default(false)
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  deletedAt               DateTime?
+  feedingAdjustments      FeedingAdjustments[]
+  feedingRecords          FeedingRecords[]
+  feedPlan                FeedPlans            @relation(fields: [feedPlansId], references: [id])
+  insemination            Inseminations        @relation(fields: [inseminationId], references: [id])
+  alerts                  Alerts[]
 }
 
 model FeedPlans {
