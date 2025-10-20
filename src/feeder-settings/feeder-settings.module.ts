@@ -9,5 +9,6 @@ import { MqttModule } from 'src/mqtt/mqtt.module';
   imports: [MqttModule],
   controllers: [FeederSettingsController],
   providers: [FeederSettingsService, FeederSettingsRepository, PrismaService],
+  exports: [FeederSettingsRepository, FeederSettingsService],
 })
 export class FeederSettingsModule {}

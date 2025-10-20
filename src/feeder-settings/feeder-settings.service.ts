@@ -2,15 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { CreateFeederSettingDto } from './dto/create-feeder-setting.dto';
 import { FeederSettingsRepository } from './feeder-settings.repository';
 import { FeederSetting } from '@prisma/client';
-import { MqttService } from 'src/mqtt/mqtt.service';
-import { SendMachineConfigurationsDTO } from 'src/mqtt/dtos/send/send-machine-configurations.dto';
-import { plainToInstance } from 'class-transformer';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class FeederSettingsService {
   constructor(
     private readonly feederSettingsRepository: FeederSettingsRepository,
-    private readonly mqttService: MqttService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async findLast(): Promise<FeederSetting | null> {
@@ -24,10 +22,12 @@ export class FeederSettingsService {
       createFeederSettingDto,
     );
 
-    await this.mqttService.sendMachineConfigurations(
-      plainToInstance(SendMachineConfigurationsDTO, created),
-    );
-
+    const b = this.eventEmitter.emit('feeder-settings.created', created);
+    if (b) {
+      console.log('enviou');
+    } else {
+      console.log('n enviou');
+    }
     return { id: created.id };
   }
 }
